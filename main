@@ -1,0 +1,90 @@
+import sys
+import logging
+
+sys.path.append(".") 
+
+from library_manager.inventory import LibraryInventory
+
+
+logging.basicConfig(
+    filename='app.log', 
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+def main():
+    inventory = LibraryInventory()
+    
+    while True:
+        print("\n=== Library Management System ===")
+        print("1. Add New Book")
+        print("2. View All Books")
+        print("3. Search by Title")
+        print("4. Issue Book")
+        print("5. Return Book")
+        print("6. Exit")
+        
+        choice = input("Enter choice (1-6): ")
+
+        try:
+            if choice == '1':
+                t = input("Enter Title: ")
+                a = input("Enter Author: ")
+                i = input("Enter ISBN: ")
+                if t and a and i:
+                    inventory.add_book(t, a, i)
+                    print("Book added successfully!")
+                else:
+                    print("Error: All fields are required.")
+
+            elif choice == '2':
+                books = inventory.display_all()
+                if not books:
+                    print("Library is empty.")
+                for b in books:
+                    print(b)
+
+            elif choice == '3':
+                key = input("Enter title keyword: ")
+                results = inventory.search_by_title(key)
+                if results:
+                    for b in results:
+                        print(b)
+                else:
+                    print("No books found.")
+
+            elif choice == '4':
+                isbn = input("Enter ISBN to issue: ")
+                book = inventory.find_by_isbn(isbn)
+                if book:
+                    if book.issue():
+                        inventory.save_books() # Update status in file
+                        print(f"Book '{book.title}' issued successfully.")
+                    else:
+                        print("Error: Book is already issued.")
+                else:
+                    print("Book not found.")
+
+            elif choice == '5':
+                isbn = input("Enter ISBN to return: ")
+                book = inventory.find_by_isbn(isbn)
+                if book:
+                    book.return_book()
+                    inventory.save_books() # Update status in file
+                    print(f"Book '{book.title}' returned.")
+                else:
+                    print("Book not found.")
+
+            elif choice == '6':
+                print("Exiting... Goodbye!")
+                break
+            
+            else:
+                print("Invalid choice. Please try again.")
+
+        except Exception as e:
+            logging.error(f"Unexpected error in CLI: {e}")
+            print("An unexpected error occurred. Please checks logs.")
+
+if __name__ == "__main__":
+    main()
