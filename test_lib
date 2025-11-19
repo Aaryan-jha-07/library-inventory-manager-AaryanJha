@@ -1,0 +1,72 @@
+import unittest
+import os
+from library_manager.books import Book
+from library_manager.inventory import LibraryInventory
+
+class TestLibrarySystem(unittest.TestCase):
+
+    def setUp(self):
+        
+        self.test_filename = "test_data.json"
+        self.inventory = LibraryInventory(filename=self.test_filename)
+        self.book = Book("The Great Gatsby", "F. Scott Fitzgerald", "12345")
+        
+      
+
+    def tearDown(self):
+        if os.path.exists(self.test_filename):
+            os.remove(self.test_filename)
+       
+
+
+    def test_book_creation(self):
+        self.assertEqual(self.book.title, "The Great Gatsby")
+        self.assertEqual(self.book.status, "Available")
+        
+
+    def test_issue_book(self):
+        self.book.issue()
+        self.assertEqual(self.book.status, "Issued")
+        result = self.book.issue()
+        self.assertFalse(result)
+        
+        
+
+    def test_return_book(self):
+        self.book.issue() 
+        self.book.return_book()
+        self.assertEqual(self.book.status, "Available")
+        
+
+    
+
+    def test_add_book_to_inventory(self):
+        
+        initial_count = len(self.inventory.books)
+        self.inventory.add_book("Python 101", "John Doe", "999")
+        
+        self.assertEqual(len(self.inventory.books), initial_count + 1)
+        self.assertEqual(self.inventory.books[-1].title, "Python 101")
+
+    def test_search_functionality(self):
+        self.inventory.add_book("Advanced Python", "Jane Doe", "888")
+        results = self.inventory.search_by_title("Advanced")
+        
+        self.assertTrue(len(results) > 0)
+        self.assertEqual(results[0].isbn, "888")
+        
+
+    def test_persistence(self):
+        self.inventory.add_book("Saved Book", "Author X", "777")
+        
+       
+        
+        new_inventory = LibraryInventory(filename=self.test_filename)
+
+        new_inventory.load_data()
+        found = new_inventory.find_by_isbn("777")
+        self.assertIsNotNone(found)
+        self.assertEqual(found.title, "Saved Book")
+
+if __name__ == '__main__':
+    unittest.main()
